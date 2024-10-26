@@ -17,15 +17,8 @@ class Calculator {
         a.add(0,"(");
         a.add(")");
 
-        //remove excess brackets
+        //----------------------------------------------------------------
         reformat();
-        
-        //add brackets to prevent wrong use of presedence of operator * and /
-        // while () {
-            
-        // }
-
-
 
         //store all brackets in arraylists
 
@@ -34,13 +27,13 @@ class Calculator {
 
     public static void main(String[] args) {
         a.add("1");
-        a.add("+");
+        a.add("/");
         a.add("(");
         a.add("2");
         a.add(")");
-        a.add("*");
+        // a.add("*");
         a.add("3");
-        a.add("/");
+        a.add("*");
         a.add("4");
         
 
@@ -57,51 +50,125 @@ class Calculator {
         if(a.size()==3)
         {
             //solve simple calculation
-
+            System.out.println("The answer is : "+calculate(Double.parseDouble(a.get(0)),a.get(1).charAt(0),Double.parseDouble(a.get(2))));
+            System.exit(0);
         }
-        
+
         //initial formatting of given equation
         format();
 
-        
-        // Scanner in=new Scanner (System.in);
-        // String equation="1+2*3/4";
-
-        // while (a.size()==1) //repeat until there is a single number as result left
-        // {
-
-        // }
-
-        // for (int i =0;i<a.size();i++) {
-
-        // }
+        while (a.size()!=1) //repeat until there is a single number as result left
+        {
+            operate();
+            reformat();
+        }
 
     }
     
 
-    public void operate() {
-
-    }
-
-    public static void reformat() // remove useless brackets
-    {
-        ArrayList<Integer> remove = new ArrayList<Integer>();
-        for (int i = 1; i < a.size() - 1; i++) {
-            if (a.get(i - 1) == "(" && a.get(i + 1) == ")") {
-                remove.add(i - 1);
-                remove.add(i + 1);
+    public static void operate() {
+        //extracting bounds of simple expression to solve
+        boolean check=false;
+        int start=999,end=999;
+        for(int i=0;i<a.size();i++)
+        {
+            if(a.get(i)=="(")
+            {
+                start=i;
+                for(int j=i;j<a.size();j++)
+                {
+                    if(a.get(j)=="(")
+                    {
+                        check=false;
+                    }
+                    if(a.get(j)==")")
+                    {
+                        end=j;
+                        check=true;
+                    }
+                }
+            }
+            if(check){
+                break;
             }
         }
-        System.out.println(remove);
-        for(int i=remove.size()-1; i>=0;i--)
+
+        double result=calculate(Double.parseDouble(a.get(start+1)),a.get(start+2).charAt(0),Double.parseDouble(a.get(end-1)));
+        
+        //  i a+b j
+        for(int f=start;f<=end;f++){
+            a.remove(f);
+        }
+
+        a.add(start, String.valueOf(result));
+    }
+
+    public static void reformat() 
+    {
+        int count=1;
+        while(true)
         {
-            System.out.println(remove.get(i));
-            a.remove((int)remove.get(i));
+            // remove useless brackets
+            if (a.get(count - 1) == "(" && a.get(count + 1) == ")")
+            {
+                a.remove(count+1);
+                a.remove(count-1);
+                System.out.println(a);
+                continue;
+            }
+
+            count++;
+            if(count==a.size()-1)
+            {
+                break;
+            }
+        }
+        // adds brackets to divisions
+        count=1;
+        while(true)
+        {
+            //adds multiplication if not present
+            if(is_number(a.get(count))&&is_number(a.get(count + 1)))
+            {
+                a.add(count+1,"*");
+            }
+
+            if(a.get(count)=="/" && (a.get(count+2)!=")"  || a.get(count-2)!="("))
+            {
+                    a.add(count+2,")");
+                    a.add(count-1,"(");
+                    
+                    System.out.println(a);
+                    
+            }
+
+            count++;
+            if(count==a.size()-1)
+            {
+                break;
+            }
+        }
+        //adds brackets to multiplication if some operation is there before division
+        count=1;
+        while(true)
+        {
+            if(a.get(count)=="*" && (a.get(count+2)!=")"  || a.get(count-2)!="("))
+            {
+                    a.add(count+2,")");
+                    a.add(count-1,"(");
+                    
+                    System.out.println(a);
+                    
+            }
+
+            count++;
+            if(count==a.size()-1)
+            {
+                break;
+            }
         }
         System.out.println(a);
     }
-
-    
 
     //checks if the equation syntax is correct
     public static boolean syntax_check() {
@@ -120,17 +187,18 @@ class Calculator {
             // if middle item is not an operator
             if(!is_operator(1))
             {
+                
                 message="Please Enter a solvable expression";
                 return false;
             }
             // if 1st and 3rd item is not a number
-            if((is_operator(0)||is_bracket(0)) || (is_operator(1)||is_bracket(1)))
+            if((is_operator(0)||is_bracket(0)) || (is_operator(2)||is_bracket(2)))
             {
+                System.out.println(!is_operator(1));
                 message="Please Enter a solvable expression";
                 return false;
             }
         }
-
 
         for(int i = 1; i < a.size() - 1; i++)
         {
@@ -194,6 +262,13 @@ class Calculator {
         if(st.contains("*")||st.contains("/")||st.contains("+")||st.contains("-"))
         {
             //returns true as it is an operator
+            return true;
+        }
+        return false;
+    }
+    public static boolean is_number(String str){
+        if(Character.isDigit(str.charAt(0)))
+        {
             return true;
         }
         return false;
