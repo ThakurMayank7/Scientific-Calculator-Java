@@ -7,9 +7,6 @@ class Calculator {
     static String message;
 
     static ArrayList<String> a = new ArrayList<String>();
-    // {"1","+","2","*","3","/","4"}
-
-    static ArrayList<Integer> opening, ending=new ArrayList<Integer>();
 
     public static void format() {
         
@@ -26,16 +23,27 @@ class Calculator {
     }
 
     public static void main(String[] args) {
+        // a.add("1");
+        // a.add("/");
+        // a.add("(");
+        // a.add("2");
+        // a.add(")");
+        // // a.add("*");
+        // a.add("3");
+        // a.add("/");
+        // a.add("4");
+
+        a.add("2");
+        a.add("*");
+        a.add("3");
+        a.add("/");
         a.add("1");
         a.add("/");
-        a.add("(");
         a.add("2");
-        a.add(")");
-        // a.add("*");
+        a.add("+");
         a.add("3");
-        a.add("*");
-        a.add("4");
-        
+        a.add("-");
+        a.add("1");
 
         boolean syntax=syntax_check();
 
@@ -57,12 +65,18 @@ class Calculator {
         //initial formatting of given equation
         format();
 
-        while (a.size()!=1) //repeat until there is a single number as result left
-        {
-            operate();
-            reformat();
-        }
 
+        
+        while (true) //repeat until there is a single number as result left
+        {
+            if(a.size()==1)
+            {
+                break;
+            }
+            reformat();
+            operate();
+            break;
+        }
     }
     
 
@@ -70,37 +84,87 @@ class Calculator {
         //extracting bounds of simple expression to solve
         boolean check=false;
         int start=999,end=999;
+
+        // stores start and end bounds of a simple expression in start and end
         for(int i=0;i<a.size();i++)
         {
             if(a.get(i)=="(")
             {
                 start=i;
-                for(int j=i;j<a.size();j++)
-                {
-                    if(a.get(j)=="(")
-                    {
-                        check=false;
-                    }
-                    if(a.get(j)==")")
-                    {
-                        end=j;
-                        check=true;
-                    }
-                }
+            }
+            if(a.get(i)==")")
+            {
+                end=i;
+                break;
             }
             if(check){
                 break;
             }
         }
 
-        double result=calculate(Double.parseDouble(a.get(start+1)),a.get(start+2).charAt(0),Double.parseDouble(a.get(end-1)));
-        
-        //  i a+b j
-        for(int f=start;f<=end;f++){
-            a.remove(f);
+        double result=0.0;
+
+        boolean div_operate=false,mult_operate=false,normal_operate=false;
+
+        for(int i=start+1; i<=end-1; i++)
+        {
+            if(a.get(i)=="/")
+            {
+                div_operate = true;
+                break;
+            }
+            if(a.get(i)=="*")
+            {
+                mult_operate = true;
+                break;
+            }
+        }
+        if(!div_operate && !mult_operate)
+        {
+            normal_operate=true;
+        }
+
+        if(div_operate)
+        {
+            result=calculate(Double.parseDouble(a.get(start+1)), '/', Double.parseDouble(a.get(end-1)));
+          
+            a.remove(start+4);
+            a.remove(start+3);
+            a.remove(start+2);
+            a.remove(start+1);
+            a.remove(start);
+          
+        }
+        else if(mult_operate)
+        {
+            result=calculate(Double.parseDouble(a.get(start+1)), '*', Double.parseDouble(a.get(end-1)));
+          
+            a.remove(start+4);
+            a.remove(start+3);
+            a.remove(start+2);
+            a.remove(start+1);
+            a.remove(start);
+           
+        }
+        else if(normal_operate)
+        {
+            System.out.println("reached here");
+            //true-->addition   false-->subtraction
+            char pre_operator='9';
+            result=Double.parseDouble(a.get(start+1));
+            for(int i=start+2;i<=end-1;i++)
+            {
+                if(is_operator(i))
+                {
+                    pre_operator=a.get(i).charAt(0);
+                    continue;
+                }
+                result=calculate(result,pre_operator,Double.parseDouble(a.get(i)));
+            }
         }
 
         a.add(start, String.valueOf(result));
+        System.out.println(a);
     }
 
     public static void reformat() 
@@ -108,20 +172,21 @@ class Calculator {
         int count=1;
         while(true)
         {
+            if(count==a.size()-2)
+            {
+                break;
+            }
             // remove useless brackets
-            if (a.get(count - 1) == "(" && a.get(count + 1) == ")")
+            if (a.get(count - 1) == "(" && a.get(count + 1) == ")" )
             {
                 a.remove(count+1);
                 a.remove(count-1);
-                System.out.println(a);
+               
                 continue;
             }
 
             count++;
-            if(count==a.size()-1)
-            {
-                break;
-            }
+            
         }
         // adds brackets to divisions
         count=1;
@@ -137,9 +202,6 @@ class Calculator {
             {
                     a.add(count+2,")");
                     a.add(count-1,"(");
-                    
-                    System.out.println(a);
-                    
             }
 
             count++;
@@ -156,9 +218,6 @@ class Calculator {
             {
                     a.add(count+2,")");
                     a.add(count-1,"(");
-                    
-                    System.out.println(a);
-                    
             }
 
             count++;
@@ -194,7 +253,6 @@ class Calculator {
             // if 1st and 3rd item is not a number
             if((is_operator(0)||is_bracket(0)) || (is_operator(2)||is_bracket(2)))
             {
-                System.out.println(!is_operator(1));
                 message="Please Enter a solvable expression";
                 return false;
             }
@@ -205,7 +263,7 @@ class Calculator {
             //check if the before of a ) bracket or after of a ( bracket is an operator
             if((a.get(i)=="("&&is_operator(i+1) )||(a.get(i)==")"&&is_operator(i-1)))
             {
-                // System.out.println("This was the wrong format");
+                
                 message="there is a syntax error in expression at "+a.get(i-1)+a.get(i)+a.get(i+1);
                 return false;
             }
